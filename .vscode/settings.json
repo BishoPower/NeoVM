@@ -1,0 +1,7 @@
+{
+  "files.associations": {
+    "utils.h": "c",
+    "neovm.h": "c",
+    "assert.h": "c"
+  }
+}
