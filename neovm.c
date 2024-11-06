@@ -18,13 +18,12 @@ int8 map(Opcode o)
     return ret;
 }
 
-VM *vm_init(Program *pr, int16 progsz)
+VM *vm_init()
 {
     VM *p;
-    Program *pp;
+    // Program *pp;
     int16 size;
 
-    assert((pr) && (progsz > 0));
     size = (int16)sizeof(struct s_vm);
     p = (VM *)malloc($i size);
     if (p == NULL)
@@ -32,26 +31,26 @@ VM *vm_init(Program *pr, int16 progsz)
         errno = ErrMem;
         return (VM *)0;
     }
-
     zero($1 p, size);
-    pp = (Program *)malloc($i progsz);
-    if (pp == NULL)
-    {
-        free(p);
-        errno = ErrMem;
-        return (VM *)0;
-    }
-    copy(pp, pr, progsz);
+
+    // pp = (Program *)malloc($i progsz);
+    // if (pp == NULL)
+    // {
+    //     free(p);
+    //     errno = ErrMem;
+    //     return (VM *)0;
+    // }
+    // copy(pp, pr, progsz);
 
     return p;
 }
 
-Program *example()
+Program *example(VM *vm)
 {
-    Program *prog;
+    Program *p;
     Instruction *i1, *i2;
     Args *a1;
-    int16 s1, s2, sa1, ps;
+    int16 s1, s2, sa1;
 
     s1 = map(mov);
     s2 = map(nop);
@@ -64,31 +63,46 @@ Program *example()
 
     i1->o = mov;
     sa1 = (s1 - 1);
+
     if (s1)
-    {
         a1 = (Args *)malloc($i sa1);
+    if (a1)
+    {
         assert(a1);
         zero(a1, sa1);
         *a1 = 0x00;
         *(a1 + 1) = 0x05;
     }
 
-    ps = (s1 + s2);
-    prog = (Program *)malloc($i ps);
+    p = vm->m;
+    copy($1 p, $1 i1, s1);
+    p += s1;
+
+    if (sa1)
+    {
+        copy($1 p, $1 a1, sa1);
+        p += sa1;
+        free(a1);
+    }
+
+    i2->o = nop;
+    copy($1 p, $1 i2, s2);
+    free(i1);
+    free(i2);
+
+    return vm->m;
 }
 
-int main(int argc, char *argv[])
+int main()
 {
-    int8 size;
     Program *prog;
     VM *vm;
 
-    size = (map(mov) + map(nop));
-    prog = example();
-    printf("prog = %p\n", prog);
-
-    vm = vm_init(prog, size);
+    vm = vm_init();
     printf("vm = %p\n", vm);
+
+    prog = example(vm);
+    printf("prog = %p\n", prog);
 
     return 0;
 }

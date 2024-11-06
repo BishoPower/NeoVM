@@ -70,7 +70,7 @@ typedef int8 Program;
 struct s_vm
 {
     CPU c;
-    Memory s;
+    Memory m;
     Program *p;
 };
 typedef struct s_vm VM;
@@ -82,7 +82,8 @@ static IM instrmap[] = {
 };
 #define IMs (sizeof(instrmap) / sizeof(struct s_instrmap))
 
-Program example(void);
+// Example is temporary
+Program *example(VM *);
 int8 map(Opcode);
-VM *vm_init(Program, int16);
-int main(int, char **);
+VM *vm_init(void);
+int main(void);
