@@ -46,33 +46,6 @@ VM *vm_init(Program *pr, int16 progsz)
     return p;
 }
 
-Program example()
-{
-    int16 size;
-    Instruction i1, i2;
-
-    size = map(mov);
-    i1 = (Instruction)malloc($i size);
-    if (!i1)
-    {
-        errno = ErrMem;
-        return (Program)0;
-    }
-
-    size = map(nop);
-    i2 = (Instruction)malloc($i size);
-    if (!i2)
-    {
-        errno = ErrMem;
-        return (Program)0;
-    }
-
-    Program prog = {i1, i2};
-    // copy(prog, (Instruction *[]){i1, i2}, sizeof(prog));
-
-    return prog;
-}
-
 Program *example()
 {
     Program *prog;
