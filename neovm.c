@@ -73,10 +73,41 @@ Program example()
     return prog;
 }
 
+Program *example()
+{
+    Program *prog;
+    Instruction *i1, *i2;
+    Args *a1;
+    int16 s1, s2, sa1, ps;
+
+    s1 = map(mov);
+    s2 = map(nop);
+
+    i1 = (Instruction *)malloc($i s1);
+    i2 = (Instruction *)malloc($i s2);
+    assert(i1 && i2);
+    zero($1 i1, s1);
+    zero($1 i2, s2);
+
+    i1->o = mov;
+    sa1 = (s1 - 1);
+    if (s1)
+    {
+        a1 = (Args *)malloc($i sa1);
+        assert(a1);
+        zero(a1, sa1);
+        *a1 = 0x00;
+        *(a1 + 1) = 0x05;
+    }
+
+    ps = (s1 + s2);
+    prog = (Program *)malloc($i ps);
+}
+
 int main(int argc, char *argv[])
 {
     int8 size;
-    Program prog;
+    Program *prog;
     VM *vm;
 
     size = (map(mov) + map(nop));
