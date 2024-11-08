@@ -1,5 +1,52 @@
 #include "neovm.h"
 
+void execinstr(VM *vm, Instruction *ip)
+{
+    Args *a1, *a2;
+    int16 size;
+
+    size = map(ip->o);
+}
+
+void execute(VM *vm)
+{
+    Program *pp;
+    int16 size;
+    Instruction *ip;
+
+    assert(vm && vm->m);
+    pp = vm->m;
+
+    while ((*pp != (Opcode)hlt) && (pp <= (Program *)vm->b))
+    {
+        ip = (Instruction *)pp;
+        size = map(ip->o);
+        execinstr(vm, ip);
+
+        $ip(vm) += size;
+        pp += size;
+    }
+    if (pp > (Program *)vm->b)
+        segfault(vm);
+}
+
+void error(VM *vm, Errorcode e)
+{
+    if (vm)
+        free(vm);
+
+    switch (e)
+    {
+    case ErrSegv:
+        fprintf(stderr, "%s\n", "Segmentation fault");
+        break;
+    default:
+        break;
+    }
+
+    exit(-1);
+}
+
 int8 map(Opcode o)
 {
     int8 n, ret;
@@ -21,7 +68,6 @@ int8 map(Opcode o)
 VM *vm_init()
 {
     VM *p;
-    // Program *pp;
     int16 size;
 
     size = (int16)sizeof(struct s_vm);
@@ -49,9 +95,10 @@ Program *example(VM *vm)
 {
     Program *p;
     Instruction *i1, *i2;
-    Args *a1;
+    Args a1;
     int16 s1, s2, sa1;
 
+    a1 = 0;
     s1 = map(mov);
     s2 = map(nop);
 
@@ -63,34 +110,28 @@ Program *example(VM *vm)
 
     i1->o = mov;
     sa1 = (s1 - 1);
-
-    if (s1)
-        a1 = (Args *)malloc($i sa1);
-    if (a1)
-    {
-        assert(a1);
-        zero(a1, sa1);
-        *a1 = 0x00;
-        *(a1 + 1) = 0x05;
-    }
+    a1 = 0x0005;
 
     p = vm->m;
-    copy($1 p, $1 i1, s1);
-    p += s1;
+    copy($1 p, $1 i1, 1);
+    p += 1;
 
-    if (sa1)
+    if (a1)
     {
-        copy($1 p, $1 a1, sa1);
+        copy($1 p, $1 & a1, sa1);
         p += sa1;
-        free(a1);
     }
 
     i2->o = nop;
-    copy($1 p, $1 i2, s2);
+    copy($1 p, $1 i2, 1);
+
+    vm->b = (int16)(s1 + sa1 + s2);
+    $ip(vm) = (Reg)vm->m;
+    $sp(vm) = (Reg)-1;
     free(i1);
     free(i2);
 
-    return vm->m;
+    return (Program *)&vm->m;
 }
 
 int main()
@@ -99,10 +140,12 @@ int main()
     VM *vm;
 
     vm = vm_init();
-    printf("vm = %p\n", vm);
+    printf("vm = %p (sz: %zu)\n", vm, sizeof(struct s_vm)); // Change %d to %zu
 
     prog = example(vm);
     printf("prog = %p\n", prog);
+
+    printhex($1 prog, (map(mov) + map(nop)), ' ');
 
     return 0;
 }

@@ -2,7 +2,7 @@
 CC = gcc
 
 # Compiler flags
-CFLAGS = -Wall -Wextra -std=c11 -Iutils
+CFLAGS = -Wextra -std=c11 -Iutils
 
 # Source files
 SRCS = neovm.c utils/utils.c

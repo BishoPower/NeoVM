@@ -20,8 +20,18 @@ typedef unsigned long long int64;
 #define $c (char *)
 #define $i (int)
 
+#define $ax(x) ((x)->c.r.ax)
+#define $bx(x) ((x)->c.r.bx)
+#define $cx(x) ((x)->c.r.cx)
+#define $dx(x) ((x)->c.r.dx)
+#define $sp(x) ((x)->c.r.sp)
+#define $ip(x) ((x)->c.r.ip)
+
+#define segfault(x) error((x), ErrSegv);
+
+#define NoError 0x00
 #define ErrMem 0x01
-#define NoArgs {0x00, 0x00}
+#define ErrSegv 0x02
 
 typedef unsigned short int Reg;
 
@@ -46,6 +56,7 @@ enum e_opcode
 {
     mov = 0x01,
     nop = 0x02,
+    hlt = 0x03
 };
 typedef enum e_opcode Opcode;
 
@@ -56,7 +67,7 @@ struct s_instrmap
 };
 typedef struct s_instrmap IM;
 
-typedef int8 Args;
+typedef int16 Args;
 struct s_instruction
 {
     Opcode o;
@@ -64,14 +75,15 @@ struct s_instruction
 };
 typedef struct s_instruction Instruction;
 
-typedef int8 Memory[((unsigned int)(-1))];
+typedef unsigned char Errorcode;
+typedef int8 Memory[((int16)(-1))];
 typedef int8 Program;
 
 struct s_vm
 {
     CPU c;
     Memory m;
-    Program *p;
+    int16 b; // break the line
 };
 typedef struct s_vm VM;
 typedef Memory *Stack;
@@ -79,9 +91,14 @@ typedef Memory *Stack;
 static IM instrmap[] = {
     {mov, 0x03},
     {nop, 0x01},
+    {hlt, 0x01},
 };
 #define IMs (sizeof(instrmap) / sizeof(struct s_instrmap))
 
+void error(VM *, Errorcode);
+void execinstr(VM *, Instruction *);
+void execinstr(VM *, Instruction *);
+void execute(VM *);
 // Example is temporary
 Program *example(VM *);
 int8 map(Opcode);
