@@ -1,50 +1,109 @@
 #include "neovm.h"
 
-void execinstr(VM *vm, Instruction *ip)
+void __mov(VM *vm, Opcode o, Args a1, Args a2)
 {
-    Args *a1, *a2;
+    $ax(vm) = (Reg)a1;
+
+    return;
+}
+
+void execinstr(VM *vm, Instruction i)
+{
+    Args a1, a2;
     int16 size;
 
-    size = map(ip->o);
+    a1 = a2 = 0;
+    size = map(i.o);
+    switch (size)
+    {
+    case 1:
+        break;
+
+    case 2:
+        a1 = i.a[0];
+        break;
+
+    case 3:
+        a1 = i.a[0];
+        a2 = i.a[1];
+        break;
+
+    default:
+        segfault(vm);
+        break;
+    }
+
+    switch (i.o)
+    {
+    case mov:
+        __mov(vm, i.o, a1, a2);
+        break;
+
+    case nop:
+        break;
+
+    case hlt:
+        error(vm, SysHlt);
+        break;
+    }
+
+    return;
 }
 
 void execute(VM *vm)
 {
+    int32 brkaddr;
     Program *pp;
     int16 size;
-    Instruction *ip;
+    Instruction ip;
 
-    assert(vm && vm->m);
-    pp = vm->m;
+    assert(vm && *vm->m);
+    size = 0;
+    brkaddr = ((int32)vm->m + vm->b);
+    pp = (Program *)&vm->m;
 
-    while ((*pp != (Opcode)hlt) && (pp <= (Program *)vm->b))
+    fflush(stdout);
+    do
     {
-        ip = (Instruction *)pp;
-        size = map(ip->o);
-        execinstr(vm, ip);
-
         $ip(vm) += size;
         pp += size;
-    }
-    if (pp > (Program *)vm->b)
-        segfault(vm);
+
+        ip.o = *pp;
+        if ((int32)pp > brkaddr)
+            segfault(vm);
+        size = map(ip.o);
+        execinstr(vm, ip);
+    } while (*pp != (Opcode)hlt);
+
+    return;
 }
 
 void error(VM *vm, Errorcode e)
 {
+    int8 exitcode;
+
+    exitcode = -1;
     if (vm)
         free(vm);
 
     switch (e)
     {
     case ErrSegv:
-        fprintf(stderr, "%s\n", "Segmentation fault");
+        fprintf(stderr, "%s\n", "VM Segmentation fault");
         break;
+
+    case SysHlt:
+        fprintf(stderr, "%s\n", "System halted");
+        exitcode = 0;
+        printf("ax = %.04hx\n", $i $ax(vm));
+
+        break;
+
     default:
         break;
     }
 
-    exit(-1);
+    exit(exitcode);
 }
 
 int8 map(Opcode o)
@@ -94,7 +153,7 @@ VM *vm_init()
 Program *example(VM *vm)
 {
     Program *p;
-    Instruction *i1, *i2;
+    Instruction *i1, *i2, *i3;
     Args a1;
     int16 s1, s2, sa1;
 
@@ -103,10 +162,12 @@ Program *example(VM *vm)
     s2 = map(nop);
 
     i1 = (Instruction *)malloc($i s1);
-    i2 = (Instruction *)malloc($i s2);
+    i2 = (Instruction *)malloc(s2);
+    i3 = (Instruction *)malloc(s2);
     assert(i1 && i2);
     zero($1 i1, s1);
     zero($1 i2, s2);
+    zero($1 i3, s2);
 
     i1->o = mov;
     sa1 = (s1 - 1);
@@ -125,9 +186,14 @@ Program *example(VM *vm)
     i2->o = nop;
     copy($1 p, $1 i2, 1);
 
-    vm->b = (int16)(s1 + sa1 + s2);
+    p++;
+    i3->o = hlt;
+    copy($1 p, $1 i3, 1);
+
+    vm->b = (s1 + sa1 + s2 + s2);
     $ip(vm) = (Reg)vm->m;
     $sp(vm) = (Reg)-1;
+
     free(i1);
     free(i2);
 
@@ -145,7 +211,9 @@ int main()
     prog = example(vm);
     printf("prog = %p\n", prog);
 
-    printhex($1 prog, (map(mov) + map(nop)), ' ');
+    execute(vm);
+
+    printhex($1 prog, (map(mov) + map(nop) + map(hlt)), ' ');
 
     return 0;
 }

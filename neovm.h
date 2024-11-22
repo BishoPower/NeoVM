@@ -7,6 +7,8 @@
 #include <assert.h>
 #include <errno.h>
 #include "utils/utils.h"
+#pragma GCC diagnostic ignored "-Wint-to-pointer-cast"
+#pragma GCC diagnostic ignored "-Wpointer-to-int-cast"
 
 typedef unsigned char int8;
 typedef unsigned short int16;
@@ -30,8 +32,9 @@ typedef unsigned long long int64;
 #define segfault(x) error((x), ErrSegv);
 
 #define NoError 0x00
-#define ErrMem 0x01
-#define ErrSegv 0x02
+#define SysHlt 0x01
+#define ErrMem 0x02
+#define ErrSegv 0x04
 
 typedef unsigned short int Reg;
 
@@ -95,9 +98,10 @@ static IM instrmap[] = {
 };
 #define IMs (sizeof(instrmap) / sizeof(struct s_instrmap))
 
+void __mov(VM *, Opcode, Args, Args);
+
 void error(VM *, Errorcode);
-void execinstr(VM *, Instruction *);
-void execinstr(VM *, Instruction *);
+void execinstr(VM *, Instruction);
 void execute(VM *);
 // Example is temporary
 Program *example(VM *);
