@@ -140,15 +140,6 @@ VM *vm_init()
     }
     zero($1 p, size);
 
-    // pp = (Program *)malloc($i progsz);
-    // if (pp == NULL)
-    // {
-    //     free(p);
-    //     errno = ErrMem;
-    //     return (VM *)0;
-    // }
-    // copy(pp, pr, progsz);
-
     return p;
 }
 
@@ -208,7 +199,7 @@ int main()
     VM *vm;
 
     vm = vm_init();
-    printf("vm = %p (sz: %zu)\n", vm, sizeof(struct s_vm)); // Change %d to %zu
+    printf("vm = %p (sz: %zu)\n", vm, sizeof(struct s_vm));
 
     prog = example(vm);
     printf("prog = %p\n", prog);
