@@ -101,7 +101,7 @@ static IM instrmap[] = {
 void __mov(VM *, Opcode, Args, Args);
 
 void error(VM *, Errorcode);
-void execinstr(VM *, Instruction);
+void execinstr(VM *, Program *);
 void execute(VM *);
 // Example is temporary
 Program *example(VM *);

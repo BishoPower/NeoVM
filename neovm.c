@@ -7,25 +7,27 @@ void __mov(VM *vm, Opcode o, Args a1, Args a2)
     return;
 }
 
-void execinstr(VM *vm, Instruction i)
+void execinstr(VM *vm, Program *p)
 {
     Args a1, a2;
     int16 size;
 
     a1 = a2 = 0;
-    size = map(i.o);
+    size = map(*p);
+
     switch (size)
     {
     case 1:
         break;
 
     case 2:
-        a1 = i.a[0];
+        a1 = *(p + 1);
         break;
 
     case 3:
-        a1 = i.a[0];
-        a2 = i.a[1];
+        a1 = *(p + 1);
+        a2 = *(p + 3);
+
         break;
 
     default:
@@ -33,10 +35,10 @@ void execinstr(VM *vm, Instruction i)
         break;
     }
 
-    switch (i.o)
+    switch (*p)
     {
     case mov:
-        __mov(vm, i.o, a1, a2);
+        __mov(vm, (Opcode)*p, a1, a2);
         break;
 
     case nop:
@@ -68,11 +70,10 @@ void execute(VM *vm)
         $ip(vm) += size;
         pp += size;
 
-        ip.o = *pp;
         if ((int32)pp > brkaddr)
             segfault(vm);
-        size = map(ip.o);
-        execinstr(vm, ip);
+        size = map(*pp);
+        execinstr(vm, pp);
     } while (*pp != (Opcode)hlt);
 
     return;
@@ -83,8 +84,6 @@ void error(VM *vm, Errorcode e)
     int8 exitcode;
 
     exitcode = -1;
-    if (vm)
-        free(vm);
 
     switch (e)
     {
@@ -103,7 +102,10 @@ void error(VM *vm, Errorcode e)
         break;
     }
 
-    exit(exitcode);
+    if (vm)
+        free(vm);
+
+    exit($i exitcode);
 }
 
 int8 map(Opcode o)
@@ -212,7 +214,6 @@ int main()
     printf("prog = %p\n", prog);
 
     execute(vm);
-
     printhex($1 prog, (map(mov) + map(nop) + map(hlt)), ' ');
 
     return 0;
